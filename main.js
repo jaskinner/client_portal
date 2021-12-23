@@ -4,6 +4,8 @@ const app = express();
 const dotenv = require("dotenv");
 const path = require('path');
 
+const siteName = "Client Portal - "
+
 dotenv.config();
 const port = process.env.PORT;
 
@@ -15,7 +17,23 @@ app.set("view engine", "pug");
 app.locals.basedir = path.join(__dirname, 'public');
 
 app.get("/", (req, res) => {
-  res.render("index", { title: "Client Portal - Home" });
+  res.render("index", { title: siteName + "Home" });
+});
+
+app.get("/pricing", (req, res) => {
+  res.render("pricing", { title: siteName + "Pricing" });
+});
+
+app.get("/faqs", (req, res) => {
+  res.render("faqs", { title: siteName + "FAQs" });
+});
+
+app.get("/features", (req, res) => {
+  res.render("features", { title: siteName + "Features" });
+});
+
+app.get("/about", (req, res) => {
+  res.render("about", { title: siteName + "About" });
 });
 
 app.listen(port, () => {
