@@ -36,6 +36,14 @@ app.get("/about", (req, res) => {
   res.render("about", { title: siteName + "About" });
 });
 
+app.get("/account", (req, res) => {
+  res.render("account", { title: siteName + "Account Home" });
+});
+
+app.get("/account/details", (req, res) => {
+  res.render("accountDetails", { title: siteName + "Account Details" });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
