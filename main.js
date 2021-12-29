@@ -7,7 +7,7 @@ const path = require('path');
 const siteName = "Client Portal - "
 
 dotenv.config();
-const port = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
@@ -44,6 +44,6 @@ app.get("/account/details", (req, res) => {
   res.render("accountDetails", { title: siteName + "Account Details" });
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Example app listening at http://localhost:${PORT}`);
 });
