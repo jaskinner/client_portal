@@ -1,47 +1,66 @@
-const cors = require("cors");
+const cookieParse = require("cookie-parser");
+const csrf = require("csurf");
+const bodyParser = require("body-parser");
 const express = require("express");
-const app = express();
-const dotenv = require("dotenv");
-const path = require('path');
+const path = require("path");
+const admin = require("firebase-admin")
 
-const siteName = "Client Portal - "
+const serviceAccount = require("./serviceAccountKey.json");
 
-dotenv.config();
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://skinner-consulting-portal-default-rtdb.firebaseio.com/"
+});
+
+const csrfMiddleware = csrf({ cookie: true });
+
 const PORT = process.env.PORT || 3000;
+const app = express();
 
-app.use(cors());
-
-app.use(express.static(path.join(__dirname, 'public')))
-app.options("*", cors());
 app.set("view engine", "pug");
-app.locals.basedir = path.join(__dirname, 'public');
+app.use(express.static("static"));
+
+app.use(bodyParser.json());
+app.use(cookieParse());
+app.use(csrfMiddleware);
+
+app.locals.basedir = path.join(__dirname, "static");
+
+app.all("*", (req, res, next) => {
+  res.cookie("XSRF-TOKEN", req.csrfToken());
+  next();
+});
+
+app.get("/login", function (req, res) {
+  res.render("login", { title: "login" });
+});
 
 app.get("/", (req, res) => {
-  res.render("index", { title: siteName + "Home" });
+  res.render("index", { title: "Home" });
 });
 
 app.get("/pricing", (req, res) => {
-  res.render("pricing", { title: siteName + "Pricing" });
+  res.render("pricing", { title: "Pricing" });
 });
 
 app.get("/faqs", (req, res) => {
-  res.render("faqs", { title: siteName + "FAQs" });
+  res.render("faqs", { title: "FAQs" });
 });
 
 app.get("/features", (req, res) => {
-  res.render("features", { title: siteName + "Features" });
+  res.render("features", { title: "Features" });
 });
 
 app.get("/about", (req, res) => {
-  res.render("about", { title: siteName + "About" });
+  res.render("about", { title: "About" });
 });
 
 app.get("/account", (req, res) => {
-  res.render("account", { title: siteName + "Account Home" });
+  res.render("account", { title: "Account Home" });
 });
 
 app.get("/account/details", (req, res) => {
-  res.render("accountDetails", { title: siteName + "Account Details" });
+  res.render("accountDetails", { title: "Account Details" });
 });
 
 app.listen(PORT, () => {
