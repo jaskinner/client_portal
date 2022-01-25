@@ -8,7 +8,7 @@ const express = require("express"),
     bodyParser = require("body-parser"),
     flash = require("express-flash");
 
-const app = express().use(morgan("combined"));
+const app = express().use(morgan("dev"));
 
 const session_configuration = {
     secret: "something super secret",
@@ -19,7 +19,7 @@ const session_configuration = {
 
 session_configuration.cookie.secure = false;
 
-app.use(flash);
+app.use(flash());
 app.use(session(session_configuration));
 app.use(cookieParser("something super secret"));
 app.use(passport.initialize());
@@ -29,17 +29,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(bodyParser.json());
 
-const users = {
-    id12345: {
-        id: 12345,
-        username: "jaskinner",
-        password: "bish",
-    },
-    id1: {
-        id: 1,
-        username: "admin",
-        password: "admin123",
-    },
+var users = {
+    "id123456": { id: 123456, username: "jonskin", password: "boo" },
+    "id1": { id: 1, username: "admin", password: "admin" },
 };
 
 passport.use(
@@ -56,7 +48,9 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-    if (users["id"] + user.id) {
+    console.log(users["id"])
+    console.log(user.id)
+    if (users["id" + user.id]) {
         done(null, "id" + user.id);
     } else {
         done(new Error("CANT_SERIALIZE_INVALID_USER"));
@@ -84,14 +78,17 @@ app.get("/login", (req, res) => {
     res.render("login", { title: "login" });
 });
 
-app.post("/login", (req, res) => {
+app.post(
+    "/login",
     passport.authenticate("local", {
         successRedirect: "/account",
-        failureRedirect: "/login",
+        failureRedirect: "/",
         successFlash: { message: "Welcome back!" },
         failureFlash: true,
-    });
-});
+    })
+);
+
+app.get("/account", (req, res) => res.render("account"));
 
 // generic route not found
 // TODO: replace with better function
