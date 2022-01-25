@@ -30,8 +30,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 var users = {
-    "id123456": { id: 123456, username: "jonskin", password: "boo" },
-    "id1": { id: 1, username: "admin", password: "admin" },
+    id123456: { id: 123456, username: "jonskin", password: "boo" },
+    id1: { id: 1, username: "admin", password: "admin" },
 };
 
 passport.use(
@@ -48,8 +48,6 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-    console.log(users["id"])
-    console.log(user.id)
     if (users["id" + user.id]) {
         done(null, "id" + user.id);
     } else {
@@ -82,16 +80,31 @@ app.post(
     "/login",
     passport.authenticate("local", {
         successRedirect: "/account",
-        failureRedirect: "/",
+        failureRedirect: "/login",
         successFlash: { message: "Welcome back!" },
         failureFlash: true,
     })
 );
 
-app.get("/account", (req, res) => res.render("account"));
+app.get("/account", authPassed, (req, res) => {
+    res.render("account");
+});
 
 // generic route not found
 // TODO: replace with better function
 app.get("*", (req, res) => res.end("404: Route not found"));
 
+app.use((err, req, res, next) => {
+    res.status(500);
+    res.end(JSON.stringify(err) + "\n");
+});
+
 app.listen(3000);
+
+function authPassed(req, res, next) {
+    if (req.isAuthenticated()) {
+        next();
+    } else {
+        res.redirect("/login");
+    }
+}
