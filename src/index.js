@@ -6,9 +6,18 @@ const express = require("express"),
     passport = require("passport"),
     LocalStrategy = require("passport-local").Strategy,
     bodyParser = require("body-parser"),
-    flash = require("express-flash");
+    flash = require("express-flash"),
+    MongoClient = require("mongodb").MongoClient;
 
 const app = express().use(morgan("dev"));
+
+const url = "mongodb://127.0.0.1:27017/sc_db";
+const db = "";
+MongoClient.connect(url, (err, dbase) => {
+    if (err) return cb(err);
+    console.log("connected to server");
+    db = dbase;
+});
 
 const session_configuration = {
     secret: "something super secret",
@@ -36,7 +45,7 @@ var users = {
 
 passport.use(
     new LocalStrategy((username, password, done) => {
-        for (userid in users) {
+        for (let userid in users) {
             const user = users[userid];
             if (user.username.toLowerCase() === username.toLowerCase()) {
                 if (user.password === password) {
@@ -96,10 +105,10 @@ app.get("*", (req, res) => res.end("404: Route not found"));
 
 app.use((err, req, res, next) => {
     res.status(500);
-    res.end(JSON.stringify(err) + "\n");
+    res.end(err + "\n");
 });
 
-app.listen(3000);
+app.listen(PORT);
 
 function authPassed(req, res, next) {
     if (req.isAuthenticated()) {
