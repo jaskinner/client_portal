@@ -1,0 +1,9 @@
+{
+    "config": {
+        "db_config": {
+            "host_url": "mongodb://127.0.0.1:27017/sc_db"
+        },
+        "static_content": "../public/",
+        "views_dir": "/views"
+    }
+}
