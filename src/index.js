@@ -5,8 +5,8 @@ const express = require("express"),
     session = require("express-session"),
     bodyParser = require("body-parser"),
     local = require("../local.config.json"),
-    db = require("./db"),
-    auth = require("./auth");
+    db = require("./handlers/db"),
+    auth = require("./handlers/auth");
 
 const app = express().use(morgan("dev"));
 
