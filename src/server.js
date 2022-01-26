@@ -71,7 +71,11 @@ app.get("/account", auth.authPassed, (req, res) => {
 });
 
 app.get("/invoices.json", invoices.list_invoices);
-app.get("/users.json", users.list_users)
+app.get("/users.json", users.list_users);
+
+// app.get("/invoices", (req, res) => {
+//     res.render("invoices", { invoices: invoices.list_invoices });
+// });
 
 // generic route not found
 app.get("*", (req, res) => res.end("404: Route not found"));

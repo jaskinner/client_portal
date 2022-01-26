@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "private": true,
   "author": "Jon Skinner",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "watch": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "watch": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "dependencies": {
     "async": "^3.2.3",
