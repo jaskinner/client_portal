@@ -1,6 +1,6 @@
 const MongoClient = require("mongodb").MongoClient,
     async = require("async"),
-    local = require("../../local.config.json");
+    local = require("../local.config.json");
 
 let db;
 

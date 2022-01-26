@@ -44,3 +44,11 @@ exports.authenticate_route = passport.authenticate("local", {
     successRedirect: "/account",
     failureRedirect: "/login",
 });
+
+exports.authPassed = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        next();
+    } else {
+        res.redirect("/login");
+    }
+};

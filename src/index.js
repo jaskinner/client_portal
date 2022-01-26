@@ -5,7 +5,7 @@ const express = require("express"),
     session = require("express-session"),
     bodyParser = require("body-parser"),
     local = require("../local.config.json"),
-    db = require("./data/db"),
+    db = require("./db"),
     auth = require("./auth");
 
 const app = express().use(morgan("dev"));
@@ -28,6 +28,7 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
+// initialize auth
 auth.init(app, (err, data) => {
     if(err){
         console.error("** FATAL ERROR WITH AUTH")
@@ -35,6 +36,18 @@ auth.init(app, (err, data) => {
         process.exit(-1);
     }
 })
+
+// initialize database
+db.init((err, results) => {
+    if (err) {
+        console.error("** FATAL ERROR ON STARTUP");
+        console.error(err);
+        process.exit(-1);
+    }
+
+    console.log(`** Database initialized, listening on port ${PORT}`);
+    app.listen(PORT);
+});
 
 // set up pug
 app.set("view engine", "pug");
@@ -51,34 +64,14 @@ app.get("/login", (req, res) => {
 
 app.post("/login", auth.authenticate_route);
 
-app.get("/account", authPassed, (req, res) => {
+app.get("/account", auth.authPassed, (req, res) => {
     res.render("account");
 });
 
 // generic route not found
-// TODO: replace with better function
 app.get("*", (req, res) => res.end("404: Route not found"));
 
 app.use((err, req, res, next) => {
     res.status(500);
     res.end(err + "\n");
-});
-
-function authPassed(req, res, next) {
-    if (req.isAuthenticated()) {
-        next();
-    } else {
-        res.redirect("/login");
-    }
-}
-
-db.init((err, results) => {
-    if (err) {
-        console.error("** FATAL ERROR ON STARTUP");
-        console.error(err);
-        process.exit(-1);
-    }
-
-    console.log(`** Database initialized, listening on port ${PORT}`);
-    app.listen(PORT);
 });
