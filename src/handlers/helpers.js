@@ -9,3 +9,8 @@ exports.send_failure = (res, server_code, err) => {
     res.writeHead(server_code, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: code, message: err.message }) + "\n");
 };
+
+exports.render_page = (res, data) => {
+    console.log(res);
+    res.render("invoices", { invoices: data });
+};
