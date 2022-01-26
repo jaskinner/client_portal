@@ -5,8 +5,10 @@ const express = require("express"),
     session = require("express-session"),
     bodyParser = require("body-parser"),
     local = require("../local.config.json"),
-    db = require("./handlers/db"),
-    auth = require("./handlers/auth");
+    db = require("./data/db"),
+    auth = require("./handlers/auth"),
+    invoices = require("./handlers/invoices"),
+    users = require("./handlers/users");
 
 const app = express().use(morgan("dev"));
 
@@ -30,17 +32,17 @@ const PORT = process.env.PORT || 3000;
 
 // initialize auth
 auth.init(app, (err, data) => {
-    if(err){
-        console.error("** FATAL ERROR WITH AUTH")
+    if (err) {
+        console.error("** FATAL ERROR WITH AUTH");
         console.error(err);
         process.exit(-1);
     }
-})
+});
 
 // initialize database
 db.init((err, results) => {
     if (err) {
-        console.error("** FATAL ERROR ON STARTUP");
+        console.error("** FATAL ERROR ON DB STARTUP");
         console.error(err);
         process.exit(-1);
     }
@@ -67,6 +69,9 @@ app.post("/login", auth.authenticate_route);
 app.get("/account", auth.authPassed, (req, res) => {
     res.render("account");
 });
+
+app.get("/invoices.json", invoices.list_invoices);
+app.get("/users.json", users.list_users)
 
 // generic route not found
 app.get("*", (req, res) => res.end("404: Route not found"));

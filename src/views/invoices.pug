@@ -1,0 +1,8 @@
+extends parts/layout
+
+block content 
+    h2 Invoices
+    p This page is private 
+    ul 
+        each invoice in invoices
+            li= invoice._id

@@ -24,43 +24,52 @@ exports.init = (callback) => {
                 const invoice_coll = db.collection("invoices");
                 invoice_coll.count((err, count) => {
                     if (err) cb(err);
-                    cb(null, count ? null : invoice_coll);
+                    cb(null, invoice_coll);
                 });
             },
             (invoice_coll, cb) => {
-                if (!invoice_coll) return cb(null);
-                invoice_coll.insertOne(
-                    { _id: "0000", amount: 0 },
-                    (err, invoice) => {
-                        if (err) {
-                            cb(err);
-                        } else {
-                            cb(null);
+                if (!invoice_coll) {
+                    invoice_coll.insertOne(
+                        { _id: "0000", amount: 0 },
+                        (err, invoice) => {
+                            if (err) {
+                                cb(err);
+                            } else {
+                                cb(null);
+                            }
                         }
-                    }
-                );
+                    );
+                }
+                exports.invoices = invoice_coll;
+                cb(null);
             },
             (cb) => {
                 const user_coll = db.collection("users");
                 user_coll.count((err, count) => {
                     if (err) cb(err);
-                    cb(null, count ? null : user_coll);
+                    cb(null, user_coll);
                 });
             },
             (user_coll, cb) => {
-                if (!user_coll) return cb(null);
-                user_coll.insertOne(
-                    { _id: 1, username: "admin", password: "admin123" },
-                    (err, user) => {
-                        if (err) {
-                            cb(err);
-                        } else {
-                            cb(null);
+                if (!user_coll) {
+                    user_coll.insertOne(
+                        { _id: 1, username: "admin", password: "admin123" },
+                        (err, user) => {
+                            if (err) {
+                                cb(err);
+                            } else {
+                                cb(null);
+                            }
                         }
-                    }
-                );
+                    );
+                }
+                exports.users = user_coll;
+                cb(null);
             },
         ],
         callback
     );
 };
+
+exports.invoices = null;
+exports.users = null;
