@@ -4,5 +4,5 @@ block content
     h2 Invoices
     ul 
         each invoice in invoices
-            li= invoice._id
+            li= invoice._id + ' | $' + invoice.amount
     

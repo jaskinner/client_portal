@@ -10,7 +10,8 @@ const express = require("express"),
     invoices = require("./handlers/invoices"),
     users = require("./handlers/users");
 
-const app = express().use(morgan("dev"));
+const app = (module.exports = express().use(morgan("dev")));
+const PORT = process.env.PORT || 3000;
 
 const session_configuration = {
     secret: "something super secret",
@@ -20,15 +21,11 @@ const session_configuration = {
 };
 
 session_configuration.cookie.secure = false;
-
 app.use(session(session_configuration));
 app.use(cookieParser("something super secret"));
 
 app.use(bodyParser.urlencoded({ extended: false }));
-
 app.use(bodyParser.json());
-
-const PORT = process.env.PORT || 3000;
 
 // initialize auth
 auth.init(app, (err, data) => {
@@ -72,7 +69,7 @@ app.get("/account", auth.authPassed, (req, res) => {
 
 app.get("/invoices.json", invoices.list_invoices);
 
-app.get("/invoices", invoices.render_invoices)
+app.get("/invoices", invoices.render_invoices);
 
 // generic route not found
 app.get("*", (req, res) => res.end("404: Route not found"));

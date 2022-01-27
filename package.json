@@ -6,6 +6,7 @@
   "author": "Jon Skinner",
   "main": "server.js",
   "scripts": {
+    "test": "mocha",
     "watch": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -26,6 +27,7 @@
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-eslint": "^6.0.0",
+    "mocha": "^9.2.0",
     "nodemon": "^2.0.15",
     "passport": "^0.5.2",
     "passport-local": "^1.0.0",
