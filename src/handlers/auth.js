@@ -1,54 +1,57 @@
-const passport = require("passport"),
-    LocalStrategy = require("passport-local").Strategy;
+const express = require("express");
+const router = express.Router();
+const passport = require("passport");
+const querystring = require("querystring");
 
-const users = {
-    id123456: { id: 123456, username: "jonskin", password: "boo" },
-    id1: { id: 1, username: "admin", password: "admin" },
-};
+require("dotenv").config();
 
-exports.init = (app, cb) => {
-    app.use(passport.initialize());
-    app.use(passport.session());
+router.get(
+    "/login",
+    passport.authenticate("auth0", {
+        scope: "openid email profile",
+    }),
+    (req, res) => res.redirect("/")
+);
 
-    passport.use(
-        new LocalStrategy((username, password, done) => {
-            for (let userid in users) {
-                const user = users[userid];
-                if (user.username.toLowerCase() === username.toLowerCase()) {
-                    if (user.password === password) {
-                        return done(null, user);
-                    }
-                }
-            }
-        })
-    );
+router.get(
+    "/callback",
+    (req, res, next) => {
+        passport.authenticate("auth0", (err, user, info) => {
+            if (err) return next(err);
+            if (!user) return res.redirect("/login");
+            req.logIn(user, (err) => {
+                if (err) return next(err);
+                const returnTo = req.session.returnTo;
+                delete req.session.returnTo;
+                res.redirect(returnTo || "/");
+            });
+        })(req, res, next);
+    },
+    (req, res) => res.redirect("/")
+);
 
-    passport.serializeUser((user, done) => {
-        if (users["id" + user.id]) {
-            done(null, "id" + user.id);
-        } else {
-            done(new Error("CANT_SERIALIZE_INVALID_USER"));
-        }
+router.get("/logout", (req, res) => {
+    req.logOut();
+
+    let returnTo = req.protocol + "://" + req.hostname;
+    const port = req.socket.localPort;
+
+    if (port !== undefined && port !== 80 && port !== 443) {
+        returnTo =
+            process.env.NODE_ENV === "production"
+                ? `${returnTo}/`
+                : `${returnTo}:${port}/`;
+    }
+
+    const logoutURL = new URL(`https://${process.env.AUTH0_DOMAIN}/v2/logout`);
+
+    const searchString = querystring.stringify({
+        client_id: process.env.AUTH0_CLIENT_ID,
+        returnTo: returnTo,
     });
+    logoutURL.search = searchString;
 
-    passport.deserializeUser((userid, done) => {
-        if (users[userid]) {
-            done(null, users[userid]);
-        } else {
-            done(new Error("CANT_FIND_USER_TO_SERIALIZE"));
-        }
-    });
-};
-
-exports.authenticate_route = passport.authenticate("local", {
-    successRedirect: "/account",
-    failureRedirect: "/login",
+    res.redirect(logoutURL);
 });
 
-exports.authPassed = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        next();
-    } else {
-        res.redirect("/login");
-    }
-};
+module.exports = router;

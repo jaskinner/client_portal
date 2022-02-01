@@ -1,80 +1,105 @@
 const express = require("express"),
     morgan = require("morgan"),
     path = require("path"),
-    cookieParser = require("cookie-parser"),
     session = require("express-session"),
-    bodyParser = require("body-parser"),
-    local = require("../local.config.json"),
-    db = require("./data/db"),
-    auth = require("./handlers/auth"),
-    invoices = require("./handlers/invoices"),
-    users = require("./handlers/users");
+    passport = require("passport"),
+    Auth0Strategy = require("passport-auth0"),
+    authRouter = require("./handlers/auth");
 
+//
+// initialize app, PORT, and env
+//
+require("dotenv").config();
 const app = (module.exports = express().use(morgan("dev")));
 const PORT = process.env.PORT || 3000;
 
-const session_configuration = {
-    secret: "something super secret",
+//
+// session config
+//
+const session_config = {
+    secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true },
+    saveUninitialized: false,
+    cookie: {},
 };
 
-session_configuration.cookie.secure = false;
-app.use(session(session_configuration));
-app.use(cookieParser("something super secret"));
+if (app.get("env") === "production") session_config.cookie.secure = true;
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// initialize auth
-auth.init(app, (err, data) => {
-    if (err) {
-        console.error("** FATAL ERROR WITH AUTH");
-        console.error(err);
-        process.exit(-1);
-    }
-});
-
-// initialize database
-db.init((err, results) => {
-    if (err) {
-        console.error("** FATAL ERROR ON DB STARTUP");
-        console.error(err);
-        process.exit(-1);
-    }
-
-    console.log(`** Database initialized, listening on port ${PORT}`);
-    app.listen(PORT);
-});
-
+//
 // set up pug
+//
 app.set("view engine", "pug");
-app.set("views", path.join(__dirname + local.config.views_dir));
+app.set("views", path.join(__dirname + process.env.VIEWS_DIR));
 
-app.locals.basedir = path.join(__dirname, local.config.static_content);
+//
+// serve static files
+//
+app.locals.basedir = path.join(__dirname, process.env.STATIC_CONTENT_DIR);
 app.use(express.static(app.locals.basedir));
+
+//
+// passport config
+//
+const strategy = new Auth0Strategy(
+    {
+        domain: process.env.AUTH0_DOMAIN,
+        clientID: process.env.AUTH0_CLIENT_ID,
+        clientSecret: process.env.AUTH0_CLIENT_SECRET,
+        callbackURL: process.env.AUTH0_CALLBACK_URL,
+    },
+    (accessToken, refreshToken, extraParams, profile, done) => {
+        return done(null, profile);
+    }
+);
+
+passport.use(strategy);
+app.use(session(session_config));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+//
+// auth
+//
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.isAuthenticated();
+    next();
+});
+
+app.use("/", authRouter);
+
+//
+// ROUTES
+//
+
+const secured = (req, res, next) => {
+    if (req.user) {
+        return next();
+    }
+    req.session.returnTo = req.originalUrl;
+    res.redirect("/login");
+};
 
 app.get("/", (req, res) => res.render("index"));
 
-app.get("/login", (req, res) => {
-    res.render("login", { title: "login" });
+app.get("/profile", secured, (req, res, next) => {
+    const { _raw, _json, ...userProfile } = req.user;
+    res.render("profile", { title: "Profile", userProfile: userProfile });
 });
 
-app.post("/login", auth.authenticate_route);
-
-app.get("/account", auth.authPassed, (req, res) => {
-    res.render("account");
-});
-
-app.get("/invoices.json", invoices.list_invoices);
-
-app.get("/invoices", invoices.render_invoices);
-
+//
 // generic route not found
+//
 app.get("*", (req, res) => res.end("404: Route not found"));
 
 app.use((err, req, res, next) => {
     res.status(500);
     res.end(err + "\n");
 });
+
+//
+// GO
+//
+app.listen(PORT);
