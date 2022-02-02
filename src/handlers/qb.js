@@ -34,6 +34,7 @@ router.get("/qbcallback", (req, res) => {
             console.log(
                 "The Token is  " + JSON.stringify(authResponse.getJson())
             );
+            res.redirect("/profile");
         })
         .catch(function (e) {
             console.error("The error message is :" + e.originalMessage);
@@ -41,4 +42,27 @@ router.get("/qbcallback", (req, res) => {
         });
 });
 
-module.exports = router
+router.get("/companyInfo", (req, res) => {
+    const companyID = oauthClient.getToken().realmId;
+
+    const url =
+        oauthClient.environment == "sandbox"
+            ? OAuthClient.environment.sandbox
+            : OAuthClient.environment.production;
+
+    oauthClient
+        .makeApiCall({
+            url: `${url}v3/company/${companyID}/companyinfo/${companyID}`,
+        })
+        .then(function (authResponse) {
+            console.log(
+                `The response for API call is :${JSON.stringify(authResponse)}`
+            );
+            res.send(JSON.parse(authResponse.text()));
+        })
+        .catch(function (e) {
+            console.error(e);
+        });
+});
+
+module.exports = router;
