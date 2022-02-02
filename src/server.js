@@ -4,11 +4,13 @@ const express = require("express"),
     session = require("express-session"),
     passport = require("passport"),
     Auth0Strategy = require("passport-auth0"),
-    authRouter = require("./handlers/auth");
+    authRouter = require("./handlers/auth"),
+    qbRouter = require("./handlers/qb");
 
 //
 // initialize app, PORT, and env
 //
+
 require("dotenv").config();
 const app = (module.exports = express().use(morgan("dev")));
 const PORT = process.env.PORT || 3000;
@@ -16,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 //
 // session config
 //
+
 const session_config = {
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -28,18 +31,21 @@ if (app.get("env") === "production") session_config.cookie.secure = true;
 //
 // set up pug
 //
+
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname + process.env.VIEWS_DIR));
 
 //
 // serve static files
 //
+
 app.locals.basedir = path.join(__dirname, process.env.STATIC_CONTENT_DIR);
 app.use(express.static(app.locals.basedir));
 
 //
 // passport config
 //
+
 const strategy = new Auth0Strategy(
     {
         domain: process.env.AUTH0_DOMAIN,
@@ -63,12 +69,14 @@ passport.deserializeUser((user, done) => done(null, user));
 //
 // auth
 //
+
 app.use((req, res, next) => {
     res.locals.isAuthenticated = req.isAuthenticated();
     next();
 });
 
 app.use("/", authRouter);
+app.use("/", qbRouter);
 
 //
 // ROUTES
@@ -92,6 +100,7 @@ app.get("/profile", secured, (req, res, next) => {
 //
 // generic route not found
 //
+
 app.get("*", (req, res) => res.end("404: Route not found"));
 
 app.use((err, req, res, next) => {
@@ -102,4 +111,5 @@ app.use((err, req, res, next) => {
 //
 // GO
 //
+
 app.listen(PORT);

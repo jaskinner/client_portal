@@ -1,7 +1,6 @@
-const express = require("express");
-const router = express.Router();
-const passport = require("passport");
-const querystring = require("querystring");
+const express = require("express"),
+    router = express.Router(),
+    passport = require("passport");
 
 require("dotenv").config();
 
@@ -45,7 +44,7 @@ router.get("/logout", (req, res) => {
 
     const logoutURL = new URL(`https://${process.env.AUTH0_DOMAIN}/v2/logout`);
 
-    const searchString = querystring.stringify({
+    const searchString = URLSearchParams.stringify({
         client_id: process.env.AUTH0_CLIENT_ID,
         returnTo: returnTo,
     });
