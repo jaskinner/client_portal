@@ -44,7 +44,7 @@ router.get("/logout", (req, res) => {
 
     const logoutURL = new URL(`https://${process.env.AUTH0_DOMAIN}/v2/logout`);
 
-    const searchString = URLSearchParams.stringify({
+    const searchString = querystring.stringify({
         client_id: process.env.AUTH0_CLIENT_ID,
         returnTo: returnTo,
     });
