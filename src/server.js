@@ -4,8 +4,7 @@ const express = require("express"),
     session = require("express-session"),
     passport = require("passport"),
     Auth0Strategy = require("passport-auth0"),
-    authRouter = require("./handlers/auth"),
-    qbRouter = require("./handlers/qb");
+    authRouter = require("./handlers/auth");
 
 //
 // initialize app, PORT, and env
@@ -33,13 +32,13 @@ if (app.get("env") === "production") session_config.cookie.secure = true;
 //
 
 app.set("view engine", "pug");
-app.set("views", path.join(__dirname + process.env.VIEWS_DIR));
+app.set("views", path.join(__dirname + "/views"));
 
 //
 // serve static files
 //
 
-app.locals.basedir = path.join(__dirname, process.env.STATIC_CONTENT_DIR);
+app.locals.basedir = path.join(__dirname, "../public");
 app.use(express.static(app.locals.basedir));
 
 //
@@ -76,7 +75,6 @@ app.use((req, res, next) => {
 });
 
 app.use("/", authRouter);
-app.use("/", qbRouter);
 
 //
 // ROUTES

@@ -22,7 +22,7 @@ router.get(
                 if (err) return next(err);
                 const returnTo = req.session.returnTo;
                 delete req.session.returnTo;
-                res.redirect(returnTo || "/");
+                res.redirect(returnTo || "/qbauth");
             });
         })(req, res, next);
     },
