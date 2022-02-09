@@ -4,7 +4,9 @@ const express = require("express"),
     session = require("express-session"),
     passport = require("passport"),
     Auth0Strategy = require("passport-auth0"),
-    authRouter = require("./handlers/auth");
+    authRouter = require("./auth"),
+    appRouter = require("./routes"),
+    { connectToServer } = require("./data");
 
 //
 // initialize app, PORT, and env
@@ -74,32 +76,13 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/", authRouter);
+app.use(authRouter);
 
 //
 // ROUTES
 //
 
-const secured = (req, res, next) => {
-    if (req.user) {
-        return next();
-    }
-    req.session.returnTo = req.originalUrl;
-    res.redirect("/login");
-};
-
-app.get("/", (req, res) => res.render("index"));
-
-app.get("/profile", secured, (req, res, next) => {
-    const { _raw, _json, ...userProfile } = req.user;
-    res.render("profile", { title: "Profile", userProfile: userProfile });
-});
-
-//
-// generic route not found
-//
-
-app.get("*", (req, res) => res.end("404: Route not found"));
+app.use(appRouter);
 
 app.use((err, req, res, next) => {
     res.status(500);
@@ -109,5 +92,8 @@ app.use((err, req, res, next) => {
 //
 // GO
 //
+connectToServer(() => {
+    console.log("Connecting to app");
 
-app.listen(PORT);
+    app.listen(PORT);
+});
