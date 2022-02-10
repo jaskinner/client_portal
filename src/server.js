@@ -6,7 +6,9 @@ const express = require("express"),
     Auth0Strategy = require("passport-auth0"),
     authRouter = require("./auth"),
     appRouter = require("./routes"),
-    { connectToServer } = require("./data");
+    ticketRouter = require("./data/tickets"),
+    { connectToServer } = require("./data"),
+    bodyParser = require("body-parser");
 
 //
 // initialize app, PORT, and env
@@ -76,12 +78,16 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 app.use(authRouter);
 
 //
 // ROUTES
 //
 
+app.use(ticketRouter);
 app.use(appRouter);
 
 app.use((err, req, res, next) => {
@@ -92,7 +98,9 @@ app.use((err, req, res, next) => {
 //
 // GO
 //
-connectToServer(() => {
+
+connectToServer((err) => {
+    if (err) return err;
     console.log("Connecting to app");
 
     app.listen(PORT);
