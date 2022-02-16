@@ -14,3 +14,5 @@ require("./routes")(app);
 // 
 
 app.listen(PORT, () => console.log("runnin"));
+
+// cleaned this up with help from https://farhan.dev/tutorial/rock-solid-express-application-architecture/
