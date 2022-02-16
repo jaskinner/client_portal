@@ -8,7 +8,6 @@ router.route("/tickets").get(async function (req, res) {
     dbConnect
         .collection("tickets")
         .find({})
-        .limit(50)
         .toArray(function (err, result) {
             if (err) {
                 res.status(400).send("Error fetching listings!");
