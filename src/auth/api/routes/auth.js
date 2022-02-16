@@ -7,6 +7,10 @@ module.exports = (router) => {
     // session config
     //
 
+    // TODO: figure out production implementation of session storage
+    // https://www.npmjs.com/package/express-session
+    // https://www.npmjs.com/package/express-session#compatible-session-stores
+
     const session_config = {
         secret: process.env.SESSION_SECRET,
         resave: false,
@@ -14,8 +18,12 @@ module.exports = (router) => {
         cookie: {},
     };
 
+    router.use(session(session_config));
+
     //
     // passport config
+    // TODO: figure out what this even is in production and saving to store
+    // https://www.passportjs.org/tutorials/auth0/state/
     //
 
     const strategy = new Auth0Strategy(
@@ -31,7 +39,6 @@ module.exports = (router) => {
     );
 
     passport.use(strategy);
-    router.use(session(session_config));
     router.use(passport.initialize());
     router.use(passport.session());
 
@@ -47,29 +54,14 @@ module.exports = (router) => {
         next();
     });
 
-    router.get(
-        "/login",
-        passport.authenticate("auth0", {
-            scope: "openid email profile",
-        }),
-        (req, res) => res.redirect("/")
-    );
+    router.get("/login", passport.authenticate("auth0"));
 
     router.get(
         "/callback",
-        (req, res, next) => {
-            passport.authenticate("auth0", (err, user, info) => {
-                if (err) return next(err);
-                if (!user) return res.redirect("/login");
-                req.logIn(user, (err) => {
-                    if (err) return next(err);
-                    const returnTo = req.session.returnTo;
-                    delete req.session.returnTo;
-                    res.redirect(returnTo || "/profile");
-                });
-            })(req, res, next);
-        },
-        (req, res) => res.redirect("/")
+        passport.authenticate("auth0", {
+            successRedirect: "/",
+            failureRedirect: "/nope",
+        })
     );
 
     router.get("/logout", (req, res) => {
