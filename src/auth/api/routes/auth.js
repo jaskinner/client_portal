@@ -20,8 +20,6 @@ module.exports = (router) => {
     //
 
     // TODO: figure out production implementation of session storage
-    // https://www.npmjs.com/package/express-session
-    // https://www.npmjs.com/package/express-session#compatible-session-stores
 
     const session_config = {
         secret: session_secret,
@@ -37,8 +35,6 @@ module.exports = (router) => {
 
     //
     // passport config
-    // TODO: figure out what this even is in production and saving to store
-    // https://www.passportjs.org/tutorials/auth0/state/
     //
 
     const strategy = new Auth0Strategy(
@@ -54,20 +50,27 @@ module.exports = (router) => {
     );
 
     passport.use(strategy);
-    router.use(passport.initialize());
-    router.use(passport.session());
+    router.use(passport.authenticate("session"));
 
-    passport.serializeUser((user, done) => done(null, user));
-    passport.deserializeUser((user, done) => done(null, user));
+    passport.serializeUser(function (user, cb) {
+        process.nextTick(function () {
+            cb(null, {
+                id: user.id,
+                username: user.username,
+                name: user.displayName,
+            });
+        });
+    });
+
+    passport.deserializeUser(function (user, cb) {
+        process.nextTick(function () {
+            return cb(null, user);
+        });
+    });
 
     //
     // auth
     //
-
-    router.use((req, res, next) => {
-        res.locals.isAuthenticated = req.isAuthenticated();
-        next();
-    });
 
     router.get("/login", passport.authenticate("auth0"));
 

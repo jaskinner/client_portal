@@ -11,7 +11,7 @@ module.exports = (app) => {
     app.get("*", (req, res) => {
         res.status(404).json({
             error: true,
-            message: "Route not found"
+            message: "Route not found",
         });
     });
 };
