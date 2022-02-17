@@ -2,9 +2,10 @@ const passport = require("passport");
 const Auth0Strategy = require("passport-auth0");
 const session = require("express-session");
 const config = require("../../../config");
+const MongoStore = require("connect-mongo");
 
 const { env } = config.app;
-
+const { db_host, db_name } = config.db;
 const {
     auth0_domain,
     auth0_callback_url,
@@ -27,6 +28,9 @@ module.exports = (router) => {
         resave: false,
         saveUninitialized: false,
         cookie: {},
+        store: MongoStore.create({
+            mongoUrl: `${db_host}/${db_name}`,
+        }),
     };
 
     router.use(session(session_config));
@@ -68,7 +72,7 @@ module.exports = (router) => {
     router.get("/login", passport.authenticate("auth0"));
 
     router.get(
-        "/callback",
+        "/auth/callback",
         passport.authenticate("auth0", {
             successRedirect: "/",
             failureRedirect: "/nope",
@@ -76,24 +80,37 @@ module.exports = (router) => {
     );
 
     router.get("/logout", (req, res) => {
-        req.logOut();
+        let logout = async () => {
+            req.logOut();
 
-        let returnTo = req.protocol + "://" + req.hostname;
-        const port = req.socket.localPort;
+            let returnTo = req.protocol + "://" + req.hostname;
+            const port = req.socket.localPort;
 
-        if (port !== undefined && port !== 80 && port !== 443) {
-            returnTo =
-                env === "production" ? `${returnTo}/` : `${returnTo}:${port}/`;
-        }
+            if (port !== undefined && port !== 80 && port !== 443) {
+                returnTo =
+                    env === "production"
+                        ? `${returnTo}/`
+                        : `${returnTo}:${port}/`;
+            }
 
-        const logoutURL = new URL(`https://${auth0_domain}/v2/logout`);
+            const logoutURL = new URL(`https://${auth0_domain}/v2/logout`);
 
-        const searchString = querystring.stringify({
-            client_id: auth0_client_id,
-            returnTo: returnTo,
-        });
-        logoutURL.search = searchString;
-
-        res.redirect(logoutURL);
+            const searchString = querystring.stringify({
+                client_id: auth0_client_id,
+                returnTo: returnTo,
+            });
+            logoutURL.search = searchString;
+        };
+        logout()
+            .then(() => {
+                req.session.destroy((err) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        res.send("Session is destroyed");
+                    }
+                });
+            })
+            .catch((e) => console.log(e));
     });
 };

@@ -21,7 +21,7 @@ app.use(
                 .join("-")}.log`,
             {
                 interval: "1d",
-                path: join(__dirname, "log"),
+                path: join(__dirname, "../log"),
             }
         ),
     })
