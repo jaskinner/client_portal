@@ -1,6 +1,17 @@
 const passport = require("passport");
 const Auth0Strategy = require("passport-auth0");
 const session = require("express-session");
+const config = require("../../../config");
+
+const { env } = config.app;
+
+const {
+    auth0_domain,
+    auth0_callback_url,
+    auth0_client_id,
+    auth0_client_secret,
+    session_secret,
+} = config.auth;
 
 module.exports = (router) => {
     //
@@ -12,7 +23,7 @@ module.exports = (router) => {
     // https://www.npmjs.com/package/express-session#compatible-session-stores
 
     const session_config = {
-        secret: process.env.SESSION_SECRET,
+        secret: session_secret,
         resave: false,
         saveUninitialized: false,
         cookie: {},
@@ -28,10 +39,10 @@ module.exports = (router) => {
 
     const strategy = new Auth0Strategy(
         {
-            domain: process.env.AUTH0_DOMAIN,
-            clientID: process.env.AUTH0_CLIENT_ID,
-            clientSecret: process.env.AUTH0_CLIENT_SECRET,
-            callbackURL: process.env.AUTH0_CALLBACK_URL,
+            domain: auth0_domain,
+            clientID: auth0_client_id,
+            clientSecret: auth0_client_secret,
+            callbackURL: auth0_callback_url,
         },
         (accessToken, refreshToken, extraParams, profile, done) => {
             return done(null, profile);
@@ -72,17 +83,13 @@ module.exports = (router) => {
 
         if (port !== undefined && port !== 80 && port !== 443) {
             returnTo =
-                process.env.NODE_ENV === "production"
-                    ? `${returnTo}/`
-                    : `${returnTo}:${port}/`;
+                env === "production" ? `${returnTo}/` : `${returnTo}:${port}/`;
         }
 
-        const logoutURL = new URL(
-            `https://${process.env.AUTH0_DOMAIN}/v2/logout`
-        );
+        const logoutURL = new URL(`https://${auth0_domain}/v2/logout`);
 
         const searchString = querystring.stringify({
-            client_id: process.env.AUTH0_CLIENT_ID,
+            client_id: auth0_client_id,
             returnTo: returnTo,
         });
         logoutURL.search = searchString;
